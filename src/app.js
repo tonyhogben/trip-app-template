@@ -584,6 +584,37 @@
     }).catch(function () {});
   }
 
+  // ---------- start your own (About card) ----------
+  function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+    return new Promise(function (resolve, reject) {
+      var ta = document.createElement("textarea");
+      ta.value = text; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand("copy") ? resolve() : reject(new Error("copy failed")); } catch (e) { reject(e); }
+      document.body.removeChild(ta);
+    });
+  }
+  function setupStarter() {
+    var cfg = CFG.starter || {}, box = $("starter");
+    if (!box) return;
+    if (!cfg.repo) { box.style.display = "none"; return; }
+    var prompt = cfg.prompt || ("Set up my own trip app from " + cfg.repo + ". Follow AGENTS.md.");
+    $("starter-prompt").textContent = prompt;
+    $("starter-repo").href = cfg.repo;
+    var btn = $("starter-copy"), status = $("starter-status"), note = status.textContent, label = btn.textContent, t;
+    btn.addEventListener("click", function () {
+      copyText(prompt).then(function () {
+        btn.textContent = "Copied \u2713"; status.textContent = "Copied. Paste it into your AI agent to get started.";
+      }, function () {
+        btn.textContent = "Copy failed"; status.textContent = "Could not copy. Press and hold the prompt above to copy it.";
+      }).then(function () {
+        clearTimeout(t);
+        t = setTimeout(function () { btn.textContent = label; status.textContent = note; }, 2500);
+      });
+    });
+  }
+
   // ---------- boot ----------
   function start() {
     renderAgenda();
@@ -595,6 +626,7 @@
   renderStatic();
   renderTicker();
   renderCrew();
+  setupStarter();
   setupThemes();
   setupInstall();
   setupUpdates();

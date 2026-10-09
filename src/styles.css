@@ -238,3 +238,10 @@ footer { text-align: center; padding: 1rem 1rem 2rem; font-size: .72rem; color: 
  * }
  * ===================================================================== */
 footer a { color: inherit; text-decoration: underline; }
+
+/* Start your own (About card) */
+.starter { margin-top: 1rem; padding-top: 1rem; border-top: 2px solid var(--border); }
+.starter h4 { font-size: .95rem; margin-bottom: .3rem; }
+.starter-prompt { margin-top: .6rem; padding: .7rem .8rem; border: 2px dashed var(--border); border-radius: 10px; background: var(--surface-2); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .8rem !important; line-height: 1.45; color: var(--ink) !important; word-break: break-word; user-select: all; -webkit-user-select: all; }
+.btn-tall { min-height: 48px; font-size: .95rem; }
+.starter-note { margin-top: .6rem; }

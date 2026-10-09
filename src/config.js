@@ -34,6 +34,14 @@ window.TRIP_CONFIG = {
     groupChat: "", // e.g. your WhatsApp group invite link. Empty = button shows "link coming".
   },
 
+  // ---- Start your own ----
+  // The "Start your own" block on the About card. Keeps pointing at the public template
+  // so anyone on your trip can spin up their own app. Set repo to "" to hide the block.
+  starter: {
+    repo: "https://github.com/tonyhogben/trip-app-template",
+    prompt: "Set up my own trip app from https://github.com/tonyhogben/trip-app-template. Follow the Quick start in AGENTS.md: ask me for the trip details you need, deploy it to my Cloudflare account, and give me the link and passcode when it is live.",
+  },
+
   // ---- Agenda ----
   // Each day: day (1 = startDate), title, items. Each item:
   //   time "HH:MM" (24h, trip local time) or a word like "Evening" (words skip Now / Up next)

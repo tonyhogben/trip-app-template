@@ -3,6 +3,145 @@
 Instructions for an AI coding agent working on this repo. Read this before you
 change anything. Humans: see README.md.
 
+## Quick start for an AI agent
+
+A human has probably just pasted something like this to you:
+
+> Set up my own trip app from https://github.com/tonyhogben/trip-app-template. Follow the Quick start in AGENTS.md: ask me for the trip details you need, deploy it to my Cloudflare account, and give me the link and passcode when it is live.
+
+Work through these steps in order. The rest of this file explains the codebase and
+how to handle feature requests once the app is live.
+
+**Golden rule: secrets never go in the repo.** The passcode, its hash, `AGENT_TOKEN`,
+`FEATURE_WEBHOOK_URL` and `FEATURE_WEBHOOK_AUTH` live only as Cloudflare secrets (and in
+the gitignored `.dev.vars` for local work). Never put them in `src/config.js`, which is
+shipped to every browser, and never commit them. The KV namespace id and project name in
+`wrangler.toml` are not secrets and are fine to commit to the human's own copy.
+
+### 1. Check what you have
+
+- `git`, Node 18 or newer, and `npm`.
+- A Cloudflare account. Either run `npx wrangler login` (opens a browser for the human),
+  or use `CLOUDFLARE_API_TOKEN` plus `CLOUDFLARE_ACCOUNT_ID` from the environment. The
+  token needs **Cloudflare Pages: Edit** and **Workers KV Storage: Edit**. The free plan is enough.
+- Optional: the GitHub CLI (`gh`) so the human gets their own repo.
+
+If something is missing, tell the human exactly what to install or create, then carry on.
+
+### 2. Get your own copy of the code
+
+Do not push to `tonyhogben/trip-app-template`. Make a copy the human owns:
+
+```bash
+# Best: a new repo from the template (needs gh, logged in as the human)
+gh repo create my-trip-app --template tonyhogben/trip-app-template --private --clone
+cd my-trip-app
+
+# Or, if the template flag is not available: fork it
+gh repo fork tonyhogben/trip-app-template --clone --fork-name my-trip-app
+
+# No GitHub at all? A plain clone works; you just will not have a remote to push to.
+git clone https://github.com/tonyhogben/trip-app-template my-trip-app
+```
+
+Then `npm install`.
+
+### 3. Ask the human for the trip details
+
+Ask in one friendly message, and offer to start with placeholders for anything they
+do not know yet:
+
+1. **Trip name** and a short tagline (for example "Lisbon 2027" and "Six friends, three days").
+2. **Where**, and the **dates**: the first day and how many days.
+3. **Agenda**: for each day, the times, what is happening and roughly where. A pasted
+   itinerary, a doc or a photo of a list is fine; you turn it into config.
+4. **The crew**: first names or nicknames only. Optional emoji and a fun role each.
+5. **A passcode** to share with the group. Short and memorable is fine. Do not echo it back
+   in logs or commits.
+6. **Project name** for the URL, which becomes `<name>.pages.dev` (lowercase letters,
+   numbers and hyphens). Suggest one from the trip name.
+7. Optional: a group chat invite link, and whether they want feature requests to go to
+   their own AI agent (step 8).
+
+No surnames, phone numbers, emails, booking references or home addresses: the agenda in
+`config.js` can be read by anyone who has the URL.
+
+### 4. Edit `src/config.js`
+
+- `trip`: `name`, `tagline`, `place`, `startDate` as `"YYYY-MM-DD"` (replace `"auto"`),
+  `utcOffset` of the destination (for example `"+01:00"`), `timeLabel`, `slug`.
+- `crew`: their names, emoji and roles.
+- `agenda`: replace every placeholder day and item. Give each item a short stable `id`
+  (check-ins are stored by it), use 24h `HH:MM` times so Now and Up next work, and add
+  `mapQuery` where a map link helps. The comments in the file list every field.
+- `links.groupChat` and `notices` if they gave you a chat link.
+- Leave `starter` pointing at the template so the crew can start their own apps later.
+
+Check it builds: `npm run build`. If you can, preview with `cp .dev.vars.example .dev.vars`
+and `npm run dev` (local passcode `letmein`).
+
+### 5. Create the Cloudflare project and KV namespace
+
+```bash
+npx wrangler pages project list                                   # make sure the name is free
+npx wrangler pages project create <name> --production-branch main
+npx wrangler kv namespace create TRIP_KV                           # prints an id
+```
+
+In `wrangler.toml`, set `name = "<name>"`, replace `REPLACE_WITH_YOUR_KV_NAMESPACE_ID`
+with the printed id, and set `TRIP_SLUG` to the trip slug.
+
+### 6. Set the passcode secret
+
+Pipe the hash straight in so it never lands in a file or the chat:
+
+```bash
+npm run --silent hash -- "THEIR PASSCODE" | npx wrangler pages secret put TRIP_PASS_HASH --project-name <name>
+```
+
+### 7. Deploy and check it
+
+```bash
+npm run deploy -- --branch main
+```
+
+The first visit to `https://<name>.pages.dev` can take a minute while the domain
+warms up. Then check the gate and the API (expect `{"ok":true,...}`):
+
+```bash
+curl -sS -X POST -H "X-Trip-Auth: $(npm run --silent hash -- "THEIR PASSCODE")" https://<name>.pages.dev/api/auth
+```
+
+`BASE=https://<name>.pages.dev PASSCODE=... npm run smoke` runs the full API test, but it
+leaves a "Smoke test request" and a check-in in the live app, so only run it if the human
+is happy with that (or run it before they share the link).
+
+### 8. Optional: wire feature requests to their own agent
+
+This is what makes the app grow during the trip. If the human has an agent or automation
+with an https trigger:
+
+```bash
+npx wrangler pages secret put FEATURE_WEBHOOK_URL  --project-name <name>   # their https trigger
+npx wrangler pages secret put FEATURE_WEBHOOK_AUTH --project-name <name>   # optional, e.g. "Bearer xyz"
+npx wrangler pages secret put AGENT_TOKEN          --project-name <name>   # long random string, for status updates
+npm run deploy -- --branch main                                            # so Functions pick up the secrets
+```
+
+Give their agent this file and [docs/AGENT-HOOKUP.md](docs/AGENT-HOOKUP.md). Without a
+webhook the app still works: requests are saved as Open, and an agent can poll
+`GET /api/feature-requests?status=open`.
+
+### 9. Commit and hand over
+
+- Commit `src/config.js` and `wrangler.toml` to the human's copy and push. Run
+  `git status` and `git diff --cached` first and make sure no passcode, hash, token or
+  webhook URL is staged.
+- Reply with: the URL `https://<name>.pages.dev`, a reminder of the passcode they chose,
+  how to install it on a phone (open the link, tap **Save as app**), whether the feature
+  request webhook is connected, and how to change things later (ask you, or edit
+  `src/config.js` and run `npm run deploy -- --branch main`).
+
 ## What this is
 
 A private group-trip web app on Cloudflare Pages + KV. The organiser seeds it with
@@ -54,6 +193,8 @@ Crew auth: header `X-Trip-Auth: <sha256 hex of passcode>`. Agent auth:
 `Authorization: Bearer <AGENT_TOKEN>`, or the crew header when `AGENT_TOKEN` is unset.
 
 ## Setup checklist (new trip)
+
+The same steps as the Quick start above, as a checklist to tick off.
 
 Work through this with the organiser. Ask for anything you do not know rather than
 inventing it.

@@ -76,7 +76,14 @@
         <div class="pill-row">
           <span class="pill">Add a theme</span><span class="pill">Photo wall</span><span class="pill">Quote wall</span><span class="pill">Map of our stops</span><span class="pill">Games</span><span class="pill">Leaderboard</span><span class="pill">Anything you can describe</span>
         </div>
-        <p class="muted" style="margin-top:.6rem">Setting this up for a new trip? Grab the code from <a href="https://github.com/tonyhogben/trip-app-template" target="_blank" rel="noopener">the template repo on GitHub</a>, then follow the checklist below or hand AGENTS.md to your AI agent.</p>
+        <div class="starter" id="starter">
+          <h4>Start your own</h4>
+          <p>Want an app like this for your own trip? Copy this prompt into your AI agent. It makes your own copy, asks you for your plans and sends you a link.</p>
+          <p class="starter-prompt" id="starter-prompt"></p>
+          <button type="button" class="btn btn-block btn-tall" id="starter-copy">Copy prompt for your AI agent</button>
+          <a class="btn btn-ghost btn-block btn-tall" id="starter-repo" href="https://github.com/tonyhogben/trip-app-template" target="_blank" rel="noopener">Open the template on GitHub</a>
+          <p class="muted starter-note" id="starter-status" aria-live="polite">Rather do it by hand? Follow the README in the repo, or the checklist below.</p>
+        </div>
         <ul class="checklist">
           <li>Agenda, trip name and dates in src/config.js</li>
           <li>Crew first names in src/config.js</li>

@@ -13,6 +13,40 @@ It runs on Cloudflare Pages (static front end + Pages Functions) with one KV
 namespace. No framework, no build step beyond copying files. It installs on
 phones as a PWA.
 
+## Quick start
+
+Three ways to get your own copy running. You need a free Cloudflare account for all of them.
+
+### a) Give this prompt to your AI agent
+
+Paste this into any AI coding agent that can run commands (and log in to Cloudflare for you).
+It makes your own copy, asks for your trip name, dates, agenda, crew and a passcode,
+deploys it and sends you the link.
+
+```text
+Set up my own trip app from https://github.com/tonyhogben/trip-app-template. Follow the Quick start in AGENTS.md: ask me for the trip details you need, deploy it to my Cloudflare account, and give me the link and passcode when it is live.
+```
+
+The agent follows [AGENTS.md](AGENTS.md#quick-start-for-an-ai-agent). The same prompt
+has a copy button on the live demo's About card.
+
+### b) Use this template on GitHub
+
+[![Use this template](https://img.shields.io/badge/Use%20this%20template-000000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/tonyhogben/trip-app-template/generate)
+
+Makes a fresh repo in your account with no shared history (or [fork it](https://github.com/tonyhogben/trip-app-template/fork) instead). Then follow
+[Deploy to Cloudflare Pages + KV](#deploy-to-cloudflare-pages--kv) below, or open your
+new repo with your AI agent and give it the prompt above with your repo's URL.
+
+### c) Why there is no "Deploy to Cloudflare" button
+
+Cloudflare's one click deploy button only supports Workers projects. This app is a
+Pages project (static site plus Pages Functions plus KV), which the button does not
+deploy, so rather than ship a button that fails, use route a or b. The manual steps
+below take about ten minutes.
+
+## Screens
+
 | Home | Agenda | Crew | Requests | Theme picker |
 |---|---|---|---|---|
 | ![Home](docs/screens/01-home.png) | ![Agenda](docs/screens/02-agenda.png) | ![Crew](docs/screens/04-crew.png) | ![Requests](docs/screens/05-feature-request.png) | ![Themes](docs/screens/07-theme-picker.png) |
@@ -37,7 +71,7 @@ More in [docs/screens](docs/screens): expanded agenda, request status list, wrap
 - **Notice ticker**, optional local reminders, group chat button.
 - **Wrap and archive modes** for when the trip is over.
 
-## Quick start (local)
+## Run it locally
 
 Needs Node 18+.
 
@@ -73,21 +107,25 @@ Then pick a passcode and hash it: `npm run hash -- "your passcode"`.
 
 ## Deploy to Cloudflare Pages + KV
 
-1. **Log in**: `npx wrangler login`
-2. **Create the KV namespace**: `npx wrangler kv namespace create TRIP_KV`
+1. **Log in**: `npx wrangler login` (or set `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`).
+2. **Create the project**: `npx wrangler pages project create <name> --production-branch main`
+   and set `name` in `wrangler.toml` to match (this becomes `<name>.pages.dev`).
+3. **Create the KV namespace**: `npx wrangler kv namespace create TRIP_KV`
    and paste the `id` into `wrangler.toml` (replacing `REPLACE_WITH_YOUR_KV_NAMESPACE_ID`).
-3. **Name the project**: set `name` in `wrangler.toml` (this becomes `<name>.pages.dev`).
-4. **First deploy** (creates the project): `npm run deploy`
-5. **Set secrets** (Cloudflare dashboard > Workers and Pages > your project >
-   Settings > Variables and Secrets, or the CLI):
+4. **Set the passcode secret** (the hash goes straight to Cloudflare, never into a file):
    ```bash
-   npx wrangler pages secret put TRIP_PASS_HASH        # output of npm run hash
-   npx wrangler pages secret put AGENT_TOKEN           # optional, long random string
-   npx wrangler pages secret put FEATURE_WEBHOOK_URL   # optional, your agent's https trigger
-   npx wrangler pages secret put FEATURE_WEBHOOK_AUTH  # optional, e.g. "Bearer xyz"
+   npm run --silent hash -- "your passcode" | npx wrangler pages secret put TRIP_PASS_HASH --project-name <name>
    ```
-6. **Deploy again** so the Functions pick up the secrets: `npm run deploy`
-7. Share the URL and the passcode in your group chat.
+   Optional secrets for the agent webhook (or set them in the dashboard under
+   Workers and Pages > your project > Settings > Variables and Secrets):
+   ```bash
+   npx wrangler pages secret put AGENT_TOKEN          --project-name <name>   # long random string
+   npx wrangler pages secret put FEATURE_WEBHOOK_URL  --project-name <name>   # your agent's https trigger
+   npx wrangler pages secret put FEATURE_WEBHOOK_AUTH --project-name <name>   # e.g. "Bearer xyz"
+   ```
+5. **Deploy**: `npm run deploy -- --branch main`. Redeploy after changing secrets so the
+   Functions pick them up.
+6. Share the URL and the passcode in your group chat.
 
 The site sends `noindex` headers and `robots.txt` disallows crawling, so it stays
 unlisted. Note that the passcode gate protects the API (requests, voice memos,
