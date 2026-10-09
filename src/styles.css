@@ -237,3 +237,4 @@ footer { text-align: center; padding: 1rem 1rem 2rem; font-size: .72rem; color: 
  *   --st-open: #ffe600; --st-building: #00c2ff; --st-done: #7dff6a; --st-blocked: #ff4d6d;
  * }
  * ===================================================================== */
+footer a { color: inherit; text-decoration: underline; }

@@ -1,5 +1,7 @@
 # Trip app template
 
+Repo: https://github.com/tonyhogben/trip-app-template
+
 A private web app for a group trip that the whole group builds together, live.
 
 You seed it with your agenda and your crew. During the trip anyone can send a
