@@ -1,0 +1,18 @@
+{
+  "name": "trip-app-template",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Private group trip PWA that the crew grows live through AI-built feature requests. Cloudflare Pages + KV.",
+  "scripts": {
+    "build": "bash scripts/build.sh",
+    "dev": "bash scripts/build.sh && wrangler pages dev dist --port 8788",
+    "deploy": "bash scripts/build.sh && wrangler pages deploy dist",
+    "hash": "node scripts/hash-passcode.mjs",
+    "smoke": "bash scripts/smoke-test.sh",
+    "archive": "node scripts/archive-snapshot.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "^3.112.0"
+  }
+}

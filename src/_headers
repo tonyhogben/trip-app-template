@@ -1,0 +1,16 @@
+/*
+  X-Robots-Tag: noindex, nofollow
+  Referrer-Policy: same-origin
+  X-Content-Type-Options: nosniff
+
+/sw.js
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/index.html
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/archive/*
+  Cache-Control: no-cache

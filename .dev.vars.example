@@ -1,0 +1,9 @@
+# Copy to .dev.vars for local development (wrangler pages dev reads it). .dev.vars is gitignored.
+# Hash for the passcode "letmein" (local only). Make your own: node scripts/hash-passcode.mjs "your passcode"
+TRIP_PASS_HASH=1c8bfe8f801d79745c4631d09fff36c82aa37fc4cce4fc946683d7b336b63032
+# Optional: lock status updates to your agent. Any long random string.
+AGENT_TOKEN=
+# Optional: where new feature requests are POSTed (your agent's webhook trigger).
+FEATURE_WEBHOOK_URL=
+# Optional: Authorization header value for that webhook, e.g. Bearer xyz
+FEATURE_WEBHOOK_AUTH=

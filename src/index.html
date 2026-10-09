@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#000000">
+<meta name="app-build" content="__BUILD_ID__">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Trip app</title>
+<!-- Apply the saved theme before first paint so there is no flash -->
+<script>(function(){try{var t=localStorage.getItem("trip_theme");if(t&&t!=="mono")document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
+<link rel="stylesheet" href="/styles.css?v=__BUILD_ID__">
+</head>
+<body>
+
+<!-- Passcode gate. The real hash lives only in the TRIP_PASS_HASH env var on the server. -->
+<div id="gate">
+  <div class="gate-box">
+    <h1 id="gate-title">Trip app</h1>
+    <p>Private trip app. Enter the passcode from your group chat.</p>
+    <form id="gate-form" autocomplete="off">
+      <input type="password" id="passcode" placeholder="Passcode" enterkeyhint="go" aria-label="Passcode">
+      <button type="submit" class="btn btn-block">Unlock</button>
+    </form>
+    <div class="gate-err" id="gate-err" aria-live="polite"></div>
+  </div>
+</div>
+
+<div id="app">
+  <header class="hero">
+    <div class="hero-eyebrow" id="hero-eyebrow">Group trip</div>
+    <h1 id="hero-title">Your trip name</h1>
+    <div class="hero-meta" id="hero-meta"></div>
+    <div class="hero-actions">
+      <button type="button" class="btn" id="btn-theme" aria-haspopup="dialog">Theme</button>
+      <button type="button" class="btn" id="btn-install">Save as app</button>
+      <a class="btn" href="#requests">Request a feature</a>
+    </div>
+  </header>
+
+  <div class="ticker" id="ticker" aria-live="polite">
+    <span class="ticker-tag" id="ticker-tag">Notice</span>
+    <span class="ticker-text" id="ticker-text"></span>
+  </div>
+
+  <nav class="nav" aria-label="Sections">
+    <div class="nav-inner">
+      <a href="#about">About</a>
+      <a href="#agenda">Agenda</a>
+      <a href="#crew">Crew</a>
+      <a href="#requests">Requests</a>
+    </div>
+  </nav>
+
+  <main>
+    <!-- ===== HOME / ABOUT ===== -->
+    <section id="about">
+      <div class="section-head"><h2>What is this?</h2><span class="sub">Start here</span></div>
+      <div class="card">
+        <h3>A private app for our trip, built by all of us</h3>
+        <p>It starts simple: the agenda and the crew. Then, during the trip, anyone can send a <b>feature request</b>. Each request goes straight to <span class="agent-name">the AI agent</span>, which builds it and ships it live, often within minutes. The app grows into whatever this group wants it to be.</p>
+        <ol class="steps">
+          <li><span><b>Check the agenda</b>The bar at the bottom always shows what is on now and what is up next.</span></li>
+          <li><span><b>Tap "I'm here"</b>Check in at a stop so everyone knows where the crew is.</span></li>
+          <li><span><b>Ask for anything</b>Type or record an idea in Requests. Watch it go from Open to Building to Done.</span></li>
+          <li><span><b>Reload when asked</b>When a new version ships you get a Reload prompt. That is your feature arriving.</span></li>
+        </ol>
+      </div>
+      <div class="card">
+        <h3>Make it yours</h3>
+        <p>This app is a template. Out of the box it is deliberately plain: black and white, placeholder plans, placeholder people. That is the point. The crew makes it theirs.</p>
+        <div class="pill-row">
+          <span class="pill">Add a theme</span><span class="pill">Photo wall</span><span class="pill">Quote wall</span><span class="pill">Map of our stops</span><span class="pill">Games</span><span class="pill">Leaderboard</span><span class="pill">Anything you can describe</span>
+        </div>
+        <p class="muted" style="margin-top:.6rem">Setting this up for a new trip? Follow the checklist below, or hand AGENTS.md to your AI agent.</p>
+        <ul class="checklist">
+          <li>Agenda, trip name and dates in src/config.js</li>
+          <li>Crew first names in src/config.js</li>
+          <li>Passcode hash and KV namespace in Cloudflare</li>
+          <li>Webhook to your AI agent (optional, but it is the magic)</li>
+          <li>Group chat link and a first theme</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ===== AGENDA (rendered from TRIP_CONFIG.agenda) ===== -->
+    <section id="agenda">
+      <div class="section-head"><h2>Agenda</h2><span class="sub" id="agenda-sub">Times are local</span></div>
+      <div id="agenda-list"></div>
+    </section>
+
+    <!-- ===== CREW (rendered from TRIP_CONFIG.crew) ===== -->
+    <section id="crew">
+      <div class="section-head"><h2>The crew</h2><span class="sub" id="crew-sub"></span></div>
+      <div class="crew-grid" id="crew-grid"></div>
+      <p class="muted" style="margin-top:.6rem">First names only. Edit the list in src/config.js. Every name picker in the app uses it.</p>
+    </section>
+
+    <!-- ===== FEATURE REQUESTS ===== -->
+    <section id="requests">
+      <div class="section-head"><h2>Request a feature</h2><span class="sub">Built live</span></div>
+      <div class="card">
+        <div id="feat-open">
+          <p>Tell <span class="agent-name">the AI agent</span> what to add next. Be specific about what it should do. First names only.</p>
+          <form id="feat-form" class="form" autocomplete="off">
+            <label>Who is asking?</label>
+            <div class="crew-chips" id="feat-chips" role="group" aria-label="Your name"></div>
+            <input type="text" id="feat-name" maxlength="24" placeholder="Or type your first name" autocomplete="given-name">
+            <label for="feat-title">Idea</label>
+            <input type="text" id="feat-title" maxlength="80" placeholder="Short title, e.g. Add a quote wall">
+            <label for="feat-details">Details</label>
+            <textarea id="feat-details" maxlength="800" placeholder="What should it do? Where should it go?"></textarea>
+            <div class="form-row">
+              <button type="submit" class="btn">Send request</button>
+              <button type="button" class="btn btn-ghost rec-btn" id="feat-rec" aria-pressed="false">Record voice</button>
+            </div>
+            <div class="voice-ready" id="voice-ready" hidden>
+              <strong id="voice-label">Voice memo ready</strong>
+              <audio id="voice-audio" controls preload="metadata"></audio>
+              <div class="form-row" style="margin-top:0">
+                <button type="button" class="btn" id="voice-send">Send voice memo</button>
+                <button type="button" class="btn btn-ghost" id="voice-del">Delete</button>
+              </div>
+            </div>
+          </form>
+          <div id="feat-status" aria-live="polite"></div>
+        </div>
+        <div id="feat-wrapped" class="wrapped-note" hidden>All wrapped up. No more feature requests for now. Everything built during the trip is still here to enjoy.</div>
+        <div class="feat-counts" id="feat-counts"></div>
+        <div id="feat-list"><p class="muted">Loading requests...</p></div>
+      </div>
+    </section>
+  </main>
+
+  <footer id="footer">Made with the trip app template</footer>
+</div>
+
+<!-- Bottom bar: Now / Up next, reminders, request, group chat -->
+<div class="bar" id="bar" aria-live="polite">
+  <div class="bar-text">
+    <div class="bar-label" id="bar-label">Up next</div>
+    <div class="bar-title" id="bar-title">...</div>
+  </div>
+  <div class="bar-actions">
+    <button type="button" class="bar-icon" id="bar-notify" role="switch" aria-checked="false" aria-label="Up next reminders on this phone" title="Reminders">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>
+    </button>
+    <a class="bar-icon" id="bar-req" href="#requests" aria-label="Request a feature" title="Request a feature">+</a>
+    <a class="bar-icon" id="bar-chat" href="#" target="_blank" rel="noopener" aria-label="Group chat" title="Group chat">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 01-12.3 7.5L3 21l2-5.5A8.5 8.5 0 1121 11.5z"/></svg>
+    </a>
+  </div>
+</div>
+
+<!-- Theme picker -->
+<div class="sheet-wrap" id="theme-sheet" aria-hidden="true">
+  <div class="sheet" role="dialog" aria-labelledby="theme-title">
+    <h3 id="theme-title">Pick a theme</h3>
+    <p>Saved on this phone only. Empty slots are waiting for the crew's themes.</p>
+    <div class="theme-grid" id="theme-grid"></div>
+    <div class="howto">
+      <b>Add your own theme</b>
+      <ol>
+        <li>Tap an empty slot, or send a request like "Add a neon theme with pink headings".</li>
+        <li><span class="agent-name">The AI agent</span> adds a <code>[data-theme="your-id"]</code> block of colour variables to <code>src/styles.css</code>.</li>
+        <li>It registers the theme in <code>TRIP_CONFIG.themes</code> and it appears here.</li>
+      </ol>
+    </div>
+    <div class="sheet-actions"><button type="button" class="btn" id="theme-close">Done</button></div>
+  </div>
+</div>
+
+<!-- Check-in name picker -->
+<div class="sheet-wrap" id="checkin-sheet" aria-hidden="true">
+  <div class="sheet" role="dialog" aria-labelledby="checkin-title">
+    <h3 id="checkin-title">I'm here</h3>
+    <p>Tap your name.</p>
+    <div class="crew-chips" id="checkin-chips" role="group" aria-label="Your name"></div>
+    <div class="sheet-actions">
+      <button type="button" class="btn btn-ghost" id="checkin-cancel">Cancel</button>
+      <button type="button" class="btn" id="checkin-go">Check in</button>
+    </div>
+  </div>
+</div>
+
+<!-- iOS install help -->
+<div class="sheet-wrap" id="install-sheet" aria-hidden="true">
+  <div class="sheet" role="dialog" aria-labelledby="install-title">
+    <h3 id="install-title">Save to your Home Screen</h3>
+    <p>In Safari, tap the Share button, then "Add to Home Screen". The app then opens full screen with one tap.</p>
+    <div class="sheet-actions"><button type="button" class="btn" id="install-close">Got it</button></div>
+  </div>
+</div>
+
+<!-- New version available -->
+<div class="update" id="update" aria-hidden="true">
+  <div class="update-card" role="alertdialog" aria-labelledby="update-title">
+    <strong id="update-title">New version ready</strong>
+    <p>Something new just shipped. Reload to get it.</p>
+    <div class="sheet-actions" style="margin-top:0">
+      <button type="button" class="btn btn-ghost" id="update-later">Later</button>
+      <button type="button" class="btn" id="update-reload">Reload</button>
+    </div>
+  </div>
+</div>
+
+<script src="/config.js?v=__BUILD_ID__"></script>
+<script src="/app.js?v=__BUILD_ID__"></script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+# Cloudflare Pages project config. Replace the placeholders, see README.md.
+name = "your-trip-app"            # your Pages project name (becomes your-trip-app.pages.dev)
+compatibility_date = "2024-10-01"
+pages_build_output_dir = "dist"
+
+# One KV namespace holds feature requests, voice memos and check-ins (key prefixes keep them apart).
+# Create it with: npx wrangler kv namespace create TRIP_KV
+[[kv_namespaces]]
+binding = "TRIP_KV"
+id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+
+# Non-secret settings. Secrets (TRIP_PASS_HASH, AGENT_TOKEN, FEATURE_WEBHOOK_URL,
+# FEATURE_WEBHOOK_AUTH) go in the Cloudflare dashboard or `wrangler pages secret put`,
+# and in .dev.vars for local development. Never commit real values.
+[vars]
+TRIP_SLUG = "trip-app"
+FEATURE_REQUESTS_CLOSED = "0"
